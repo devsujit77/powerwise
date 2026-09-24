@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#081c2c" />
+  <title>PowerWise — AI Electricity Awareness</title>
+  <style>
+    :root{
+      --bg:#f4f8f7;
+      --surface:#ffffff;
+      --surface-2:#f8fbfa;
+      --text:#102a43;
+      --muted:#6b7c8f;
+      --line:#e4ece9;
+      --primary:#19a463;
+      --primary-dark:#087443;
+      --primary-soft:#e8f8ef;
+      --blue:#2687f0;
+      --blue-soft:#eaf4ff;
+      --amber:#f5a623;
+      --amber-soft:#fff5df;
+      --red:#ef5b5b;
+      --red-soft:#fff0f0;
+      --nav:#071b2b;
+      --nav-2:#0d2a40;
+      --shadow:0 16px 45px rgba(16,42,67,.08);
+      --radius:20px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:var(--bg);
+      overflow-x:hidden;
+    }
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .app{min-height:100vh;display:flex}
+    .sidebar{
+      width:248px;position:fixed;inset:0 auto 0 0;background:linear-gradient(180deg,var(--nav),#061522);
+      color:#dbe8f0;padding:22px 15px;z-index:20;display:flex;flex-direction:column;
+    }
+    .brand{display:flex;align-items:center;gap:11px;padding:4px 10px 25px}
+    .brand-mark{
+      width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
+      background:linear-gradient(145deg,#32c978,#0b7f4a);box-shadow:0 10px 25px rgba(25,164,99,.25);
+      color:#fff;font-size:22px;font-weight:900;
+    }
+    .brand strong{font-size:20px;letter-spacing:-.5px;color:#fff}
+    .brand strong span{color:#45ce83}
+    .nav{display:grid;gap:7px}
+    .nav button{
+      border:0;background:transparent;color:#a9bbc8;text-align:left;padding:12px 13px;border-radius:12px;
+      display:flex;align-items:center;gap:12px;transition:.2s;font-weight:600;
+    }
+    .nav button:hover,.nav button.active{background:rgba(255,255,255,.09);color:#fff}
+    .nav-icon{width:21px;text-align:center;font-size:17px}
+    .sidebar-bottom{margin-top:auto}
+    .eco-card{
+      background:linear-gradient(145deg,rgba(35,190,112,.18),rgba(255,255,255,.04));
+      border:1px solid rgba(113,224,165,.18);border-radius:16px;padding:16px;margin:10px 5px 8px;
+    }
+    .eco-card .leaf{font-size:25px}
+    .eco-card strong{display:block;color:#fff;margin:7px 0 4px}
+    .eco-card small{color:#9eb5c4;line-height:1.45}
+    .main{margin-left:248px;width:calc(100% - 248px);padding:24px 28px 42px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:22px}
+    .welcome h1{font-size:29px;margin:0 0 5px;letter-spacing:-1px}
+    .welcome p{margin:0;color:var(--muted)}
+    .top-actions{display:flex;gap:10px;align-items:center}
+    .period{
+      border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:11px;color:var(--text);
+      font-weight:650;box-shadow:0 5px 15px rgba(16,42,67,.04)
+    }
+    .icon-btn,.primary-btn{
+      border:0;border-radius:11px;padding:11px 15px;font-weight:750;
+    }
+    .primary-btn{background:var(--primary);color:#fff;box-shadow:0 8px 18px rgba(25,164,99,.18)}
+    .primary-btn:hover{background:var(--primary-dark)}
+    .dashboard{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:20px}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:16px}
+    .card{
+      background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:19px;
+      box-shadow:var(--shadow)
+    }
+    .stat-card{position:relative;overflow:hidden}
+    .stat-card:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-35px;top:-35px;background:var(--primary-soft)}
+    .stat-top{display:flex;justify-content:space-between;align-items:center}
+    .stat-icon{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;font-size:19px;position:relative;z-index:1}
+    .green{background:var(--primary-soft);color:var(--primary-dark)}
+    .blue{background:var(--blue-soft);color:var(--blue)}
+    .amber{background:var(--amber-soft);color:#d18400}
+    .stat-label{font-size:13px;color:var(--muted);margin-top:14px}
+    .stat-value{font-size:27px;font-weight:820;margin-top:3px;letter-spacing:-.7px}
+    .trend{font-size:12px;margin-top:7px;font-weight:700}
+    .trend.good{color:var(--primary-dark)} .trend.bad{color:var(--red)}
+    .grid-2{display:grid;grid-template-columns:1.25fr .95fr;gap:16px}
+    .card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;margin-bottom:15px}
+    .card-head h2{font-size:17px;margin:0}
+    .card-head p{font-size:12px;color:var(--muted);margin:5px 0 0}
+    .select{
+      border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 9px;font-size:12px;color:var(--muted)
+    }
+    .chart-wrap{height:245px;position:relative}
+    canvas{width:100%;height:100%}
+    .legend{display:flex;flex-wrap:wrap;gap:9px;margin-top:5px}
+    .legend span{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+    .dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+    .donut-box{display:flex;align-items:center;justify-content:center;gap:20px;min-height:225px}
+    .donut{
+      width:170px;height:170px;border-radius:50%;
+      background:conic-gradient(#ef5b5b 0 40%,#2687f0 40% 60%,#f5b83c 60% 76%,#36b76f 76% 88%,#8a68c9 88% 95%,#b7c2cb 95% 100%);
+      position:relative;flex:0 0 auto;
+    }
+    .donut:after{content:"";position:absolute;inset:34px;background:#fff;border-radius:50%}
+    .donut-center{position:absolute;z-index:1;inset:0;display:grid;place-items:center;text-align:center}
+    .donut-center strong{display:block;font-size:22px}.donut-center small{color:var(--muted);font-size:11px}
+    .breakdown{display:grid;gap:9px;width:150px}
+    .break-row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+    .break-name{display:flex;gap:7px;align-items:center;color:#536678}
+    .bar{height:5px;background:#edf1f3;border-radius:99px;margin-top:4px;overflow:hidden}
+    .bar i{display:block;height:100%;border-radius:99px}
+    .insight{
+      margin-top:16px;display:flex;gap:15px;align-items:flex-start;background:linear-gradient(100deg,#f1fbf5,#fff);
+      border:1px solid #d8eee1;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)
+    }
+    .bulb{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#fff1c9;font-size:21px;flex:0 0 auto}
+    .insight h3{margin:0 0 5px;font-size:15px}.insight p{margin:0;color:#607386;font-size:13px;line-height:1.5}
+    .insight button{margin-left:auto;white-space:nowrap;border:1px solid #b8dccc;background:#fff;color:var(--primary-dark);border-radius:9px;padding:9px 12px;font-weight:700}
+    .chat{
+      background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+      min-height:650px;display:flex;flex-direction:column;overflow:hidden;position:sticky;top:20px
+    }
+    .chat-head{padding:17px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+    .bot-title{display:flex;gap:10px;align-items:center}
+    .bot-avatar{width:37px;height:37px;border-radius:12px;background:var(--primary-soft);display:grid;place-items:center;color:var(--primary-dark);font-weight:900}
+    .bot-title strong{display:block;font-size:14px}.online{font-size:11px;color:var(--primary);margin-top:2px}
+    .new-chat{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 9px;font-size:11px;font-weight:700;color:var(--text)}
+    .messages{padding:18px;overflow:auto;flex:1;display:flex;flex-direction:column;gap:12px;max-height:510px}
+    .msg{display:flex;gap:8px;max-width:94%}
+    .msg.user{align-self:flex-end;flex-direction:row-reverse}
+    .bubble{background:#f0f5f5;padding:11px 13px;border-radius:14px 14px 14px 4px;font-size:12px;line-height:1.55;color:#30475b}
+    .user .bubble{background:#168cf2;color:#fff;border-radius:14px 14px 4px 14px}
+    .msg-avatar{width:27px;height:27px;border-radius:9px;background:var(--primary-soft);display:grid;place-items:center;flex:0 0 auto;font-size:12px}
+    .user .msg-avatar{background:#dcefff;color:#1675c7}
+    .suggestions{display:flex;gap:7px;flex-wrap:wrap;padding:0 15px 12px}
+    .suggestions button{border:1px solid #dbe7ed;background:#fff;color:#466176;border-radius:99px;padding:7px 10px;font-size:10px}
+    .composer{border-top:1px solid var(--line);padding:12px;display:flex;gap:8px}
+    .composer input{flex:1;border:1px solid var(--line);border-radius:11px;padding:11px 12px;outline:0;background:#fbfdfd}
+    .composer input:focus{border-color:#8fd2ae}
+    .send{width:42px;border:0;border-radius:11px;background:#2687f0;color:#fff;font-size:18px}
+    .lower{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px}
+    .feature{display:flex;gap:12px;align-items:flex-start}
+    .feature-icon{width:39px;height:39px;border-radius:12px;background:#edf6ff;color:#2687f0;display:grid;place-items:center;font-size:17px;flex:0 0 auto}
+    .feature h3{margin:0 0 4px;font-size:14px}.feature p{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+    .usage-list{display:grid;gap:12px}
+    .usage-item{display:flex;align-items:center;gap:11px}
+    .usage-item .ui-icon{width:35px;height:35px;border-radius:10px;background:#f1f7f5;display:grid;place-items:center}
+    .usage-copy{flex:1}.usage-copy strong{display:block;font-size:12px}.usage-copy span{font-size:10px;color:var(--muted)}
+    .progress{height:7px;background:#edf2f2;border-radius:99px;overflow:hidden;margin-top:5px}.progress i{display:block;height:100%;background:var(--primary);border-radius:99px}
+    .footer{margin-top:24px;text-align:center;color:#91a0ad;font-size:11px}
+    .toast{position:fixed;right:22px;bottom:22px;background:#082033;color:#fff;padding:12px 15px;border-radius:11px;box-shadow:var(--shadow);transform:translateY(90px);opacity:0;transition:.25s;z-index:50;font-size:12px}
+    .toast.show{transform:translateY(0);opacity:1}
+    .mobile-toggle{display:none}
+    @media(max-width:1120px){
+      .dashboard{grid-template-columns:1fr}.chat{position:relative;top:0;min-height:570px}
+      .cards{grid-template-columns:repeat(3,1fr)}
+    }
+    @media(max-width:800px){
+      .sidebar{transform:translateX(-100%);transition:.25s}.sidebar.open{transform:translateX(0)}
+      .main{margin-left:0;width:100%;padding:18px}.mobile-toggle{display:grid;place-items:center;width:42px;height:42px;border:1px solid var(--line);background:#fff;border-radius:11px}
+      .topbar{align-items:flex-start}.welcome{display:flex;gap:10px}.welcome h1{font-size:23px}
+      .cards,.grid-2,.lower{grid-template-columns:1fr}
+      .donut-box{justify-content:space-around}
+    }
+    @media(max-width:520px){
+      .top-actions .period{display:none}.cards{gap:10px}.card{padding:15px}.donut{width:140px;height:140px}
+      .donut:after{inset:28px}.breakdown{width:135px}
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">ϟ</div>
+      <strong>Power<span>Wise</span></strong>
+    </div>
+    <nav class="nav">
+      <button class="active" data-section="home"><span class="nav-icon">⌂</span> Home</button>
+      <button data-section="usage"><span class="nav-icon">▥</span> My Usage</button>
+      <button data-section="appliances"><span class="nav-icon">▣</span> Appliances</button>
+      <button data-section="assistant"><span class="nav-icon">✦</span> AI Assistant</button>
+      <button data-section="tips"><span class="nav-icon">♧</span> Saving Tips</button>
+      <button data-section="settings"><span class="nav-icon">⚙</span> Settings</button>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="eco-card">
+        <div class="leaf">♧</div>
+        <strong>Save Energy. Save Money.</strong>
+        <small>Small daily changes can create a meaningful difference over time.</small>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="welcome">
+        <button class="mobile-toggle" id="mobileToggle">☰</button>
+        <div>
+          <h1>Welcome to PowerWise ⚡</h1>
+          <p>Understand your electricity usage. Make smarter energy decisions.</p>
+        </div>
+      </div>
+      <div class="top-actions">
+        <select class="period" id="period">
+          <option>This Month</option>
+          <option>Last 7 Days</option>
+          <option>Today</option>
+        </select>
+        <button class="primary-btn" id="refreshBtn">↻ Refresh Data</button>
+      </div>
+    </header>
+
+    <section class="dashboard">
+      <div>
+        <div class="cards">
+          <article class="card stat-card">
+            <div class="stat-top"><div class="stat-icon green">⚡</div><span class="trend good">↓ 12%</span></div>
+            <div class="stat-label">Total Consumption</div>
+            <div class="stat-value" id="totalUsage">210 kWh</div>
+            <div class="trend good">vs. previous period</div>
+          </article>
+          <article class="card stat-card">
+            <div class="stat-top"><div class="stat-icon blue">₹</div><span class="trend bad">↑ 8%</span></div>
+            <div class="stat-label">Estimated Bill</div>
+            <div class="stat-value" id="bill">₹1,470</div>
+            <div class="trend bad">estimated from usage</div>
+          </article>
+          <article class="card stat-card">
+            <div class="stat-top"><div class="stat-icon amber">♧</div><span class="trend good">↓ 12%</span></div>
+            <div class="stat-label">Energy Footprint</div>
+            <div class="stat-value" id="footprint">24 kg</div>
+            <div class="trend good">CO₂e estimate</div>
+          </article>
+        </div>
+
+        <div class="grid-2">
+          <article class="card">
+            <div class="card-head">
+              <div><h2>Daily Electricity Usage</h2><p>Last 30 days · kWh per day</p></div>
+              <select class="select" id="chartMode"><option>Usage</option><option>Trend</option></select>
+            </div>
+            <div class="chart-wrap"><canvas id="usageChart"></canvas></div>
+            <div class="legend"><span><i class="dot"></i> Daily consumption</span><span><i class="dot" style="background:#d9e7e0"></i> Average baseline</span></div>
+          </article>
+
+          <article class="card">
+            <div class="card-head">
+              <div><h2>Top Energy Consumers</h2><p>Appliance contribution</p></div>
+            </div>
+            <div class="donut-box">
+              <div class="donut"><div class="donut-center"><div><strong>210</strong><small>kWh total</small></div></div></div>
+              <div class="breakdown" id="breakdown"></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="insight">
+          <div class="bulb">💡</div>
+          <div>
+            <h3>AI Insight</h3>
+            <p id="insightText">Your electricity usage is higher on weekends, mainly due to increased AC and entertainment-device usage.</p>
+          </div>
+          <button id="detailsBtn">Show Details</button>
+        </div>
+      </div>
+
+      <aside class="chat" id="assistantPanel">
+        <div class="chat-head">
+          <div class="bot-title">
+            <div class="bot-avatar">⚡</div>
+            <div><strong>PowerWise AI Assistant</strong><div class="online">● Online</div></div>
+          </div>
+          <button class="new-chat" id="newChat">+ New Chat</button>
+        </div>
+        <div class="messages" id="messages">
+          <div class="msg">
+            <div class="msg-avatar">⚡</div>
+            <div class="bubble">Hello! I'm your PowerWise AI Assistant. Ask me about your electricity usage, appliances, bills, or energy-saving ideas.</div>
+          </div>
+          <div class="msg user">
+            <div class="msg-avatar">U</div>
+            <div class="bubble">Why is my electricity bill high this month?</div>
+          </div>
+          <div class="msg">
+            <div class="msg-avatar">⚡</div>
+            <div class="bubble">Based on the available demo data, your AC is the largest contributor at about 40% of recorded usage. Water-heater usage is the next major contributor.</div>
+          </div>
+          <div class="msg">
+            <div class="msg user">
+              <div class="msg-avatar">U</div>
+              <div class="bubble">Give me some tips.</div>
+            </div>
+          </div>
+          <div class="msg">
+            <div class="msg-avatar">⚡</div>
+            <div class="bubble">Try reducing unnecessary AC runtime, avoid standby power, optimize water-heater use, and monitor your daily consumption for unusual spikes.</div>
+          </div>
+        </div>
+        <div class="suggestions">
+          <button>Why is my bill high?</button>
+          <button>Highest consumer?</button>
+          <button>How can I save?</button>
+          <button>Explain kWh</button>
+        </div>
+        <div class="composer">
+          <input id="chatInput" placeholder="Ask about your electricity usage..." autocomplete="off" />
+          <button class="send" id="sendBtn">➤</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="lower">
+      <article class="card">
+        <div class="card-head"><div><h2>Why PowerWise?</h2><p>AI-powered electricity awareness</p></div></div>
+        <div class="feature"><div class="feature-icon">⌁</div><div><h3>Consumption Analysis</h3><p>Detect patterns, trends and unusual usage from your electricity data.</p></div></div>
+        <br>
+        <div class="feature"><div class="feature-icon">♧</div><div><h3>Personalized Saving</h3><p>Get practical recommendations based on your biggest energy consumers.</p></div></div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><div><h2>Appliance Usage</h2><p>Current consumption distribution</p></div></div>
+        <div class="usage-list">
+          <div class="usage-item"><div class="ui-icon">❄</div><div class="usage-copy"><strong>Air Conditioner <span style="float:right">40%</span></strong><span>84 kWh</span><div class="progress"><i style="width:40%"></i></div></div></div>
+          <div class="usage-item"><div class="ui-icon">♨</div><div class="usage-copy"><strong>Water Heater <span style="float:right">16%</span></strong><span>34 kWh</span><div class="progress"><i style="width:16%"></i></div></div></div>
+          <div class="usage-item"><div class="ui-icon">▣</div><div class="usage-copy"><strong>Refrigerator <span style="float:right">20%</span></strong><span>42 kWh</span><div class="progress"><i style="width:20%"></i></div></div></div>
+          <div class="usage-item"><div class="ui-icon">☼</div><div class="usage-copy"><strong>Lighting <span style="float:right">8%</span></strong><span>17 kWh</span><div class="progress"><i style="width:8%"></i></div></div></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head"><div><h2>Energy Challenge</h2><p>Your weekly target</p></div></div>
+        <div style="display:flex;align-items:center;gap:18px;margin:15px 0 20px">
+          <div style="width:84px;height:84px;border-radius:50%;background:conic-gradient(#19a463 0 78%,#eaf0ed 78% 100%);display:grid;place-items:center">
+            <div style="width:63px;height:63px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:850;font-size:19px">78%</div>
+          </div>
+          <div><strong style="font-size:15px">On track!</strong><p style="margin:5px 0 0;color:var(--muted);font-size:12px;line-height:1.5">Reduce your weekly consumption by another 5% to reach your target.</p></div>
+        </div>
+        <button class="primary-btn" style="width:100%" id="challengeBtn">View Saving Plan</button>
+      </article>
+    </section>
+
+    <div class="footer">PowerWise • AI Agent for Electricity Consumption Awareness • Prototype Dashboard</div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+  const data = {
+    usage: [6.1,6.8,6.5,7.2,6.9,7.8,6.7,7.1,8.2,7.4,8.1,9.2,10.1,10.4,11.2,7.8,8.4,9.7,11.7,10.8,11.9,10.7,11.5,12.1,11.2,12.8,13.9,11.5,11.8,12.6],
+    appliances: [
+      {name:"AC", value:40, color:"#ef5b5b"},
+      {name:"Refrigerator", value:20, color:"#2687f0"},
+      {name:"Water Heater", value:16, color:"#f5b83c"},
+      {name:"Washing Machine", value:12, color:"#36b76f"},
+      {name:"Lighting", value:8, color:"#8a68c9"},
+      {name:"Others", value:4, color:"#b7c2cb"}
+    ]
+  };
+
+  const $ = id => document.getElementById(id);
+
+  function drawChart(){
+    const canvas = $("usageChart");
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+    const ctx = canvas.getContext("2d");
+    ctx.scale(dpr,dpr);
+    const w=rect.width,h=rect.height;
+    const pad={l:38,r:12,t:12,b:28};
+    const plotW=w-pad.l-pad.r, plotH=h-pad.t-pad.b;
+    const vals=data.usage;
+    const max=16, avg=8.9;
+
+    ctx.clearRect(0,0,w,h);
+    ctx.font="10px Inter, sans-serif";
+    ctx.fillStyle="#8797a6";
+    ctx.strokeStyle="#edf1f3";
+    ctx.lineWidth=1;
+
+    for(let y=0;y<=16;y+=4){
+      const py=pad.t+plotH-(y/max)*plotH;
+      ctx.beginPath();ctx.moveTo(pad.l,py);ctx.lineTo(w-pad.r,py);ctx.stroke();
+      ctx.fillText(y,8,py+3);
+    }
+
+    const points=vals.map((v,i)=>({
+      x:pad.l+(i/(vals.length-1))*plotW,
+      y:pad.t+plotH-(v/max)*plotH
+    }));
+
+    ctx.beginPath();
+    points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+    ctx.lineTo(points[points.length-1].x,pad.t+plotH);
+    ctx.lineTo(points[0].x,pad.t+plotH);
+    ctx.closePath();
+    const grad=ctx.createLinearGradient(0,pad.t,0,h);
+    grad.addColorStop(0,"rgba(25,164,99,.22)");
+    grad.addColorStop(1,"rgba(25,164,99,0)");
+    ctx.fillStyle=grad;ctx.fill();
+
+    ctx.setLineDash([5,5]);ctx.strokeStyle="#cfe2d8";
+    const ay=pad.t+plotH-(avg/max)*plotH;
+    ctx.beginPath();ctx.moveTo(pad.l,ay);ctx.lineTo(w-pad.r,ay);ctx.stroke();ctx.setLineDash([]);
+
+    ctx.beginPath();ctx.strokeStyle="#19a463";ctx.lineWidth=2.5;
+    points.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
+
+    points.forEach((p,i)=>{
+      if(i===0||i===7||i===14||i===21||i===29){
+        ctx.fillStyle="#fff";ctx.strokeStyle="#19a463";ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(p.x,p.y,3.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+      }
+    });
+    ctx.fillStyle="#8797a6";
+    [["Sep 1",0],["Sep 8",7],["Sep 15",14],["Sep 22",21],["Sep 30",29]].forEach(([label,i])=>{
+      const p=points[i];ctx.fillText(label,p.x-12,h-8);
+    });
+  }
+
+  function renderBreakdown(){
+    $("breakdown").innerHTML=data.appliances.map(a=>`
+      <div>
+        <div class="break-row"><span class="break-name"><i style="width:8px;height:8px;border-radius:50%;background:${a.color}"></i>${a.name}</span><strong>${a.value}%</strong></div>
+        <div class="bar"><i style="width:${a.value}%;background:${a.color}"></i></div>
+      </div>`).join("");
+  }
+
+  function toast(message){
+    const t=$("toast");t.textContent=message;t.classList.add("show");
+    clearTimeout(window.__toast);window.__toast=setTimeout(()=>t.classList.remove("show"),2500);
+  }
+
+  function addMessage(text,isUser=false){
+    const wrap=document.createElement("div");
+    wrap.className="msg"+(isUser?" user":"");
+    wrap.innerHTML=`<div class="msg-avatar">${isUser?"U":"⚡"}</div><div class="bubble"></div>`;
+    wrap.querySelector(".bubble").textContent=text;
+    $("messages").appendChild(wrap);
+    $("messages").scrollTop=$("messages").scrollHeight;
+  }
+
+  function aiReply(q){
+    const s=q.toLowerCase();
+    if(s.includes("bill")||s.includes("high")){
+      return "Based on the demo data, AC is your largest energy consumer at about 40%. Water-heater and refrigerator usage are the next major contributors. I recommend checking AC runtime first.";
+    }
+    if(s.includes("highest")||s.includes("appliance")||s.includes("consumer")){
+      return "Your AC is currently the highest consumer, accounting for approximately 40% of the recorded usage (about 84 kWh in this demo dataset).";
+    }
+    if(s.includes("save")||s.includes("reduce")||s.includes("tip")){
+      return "Start with the biggest contributors: reduce unnecessary AC runtime, optimize water-heater usage, avoid standby power, use efficient lighting, and monitor daily usage for unusual spikes.";
+    }
+    if(s.includes("kwh")||s.includes("unit")){
+      return "1 unit of electricity equals 1 kWh. A 1,000-watt appliance running for 1 hour consumes approximately 1 unit, assuming its rated power is actually used for that full hour.";
+    }
+    if(s.includes("usage")||s.includes("consume")||s.includes("consumption")){
+      return "Your current demo dashboard shows 210 kWh for the period. The largest contributor is AC usage. Ask me to compare usage, find high-consumption periods, or suggest savings.";
+    }
+    return "I can help with electricity consumption, appliance usage, electricity bills, unusual usage patterns, kWh calculations, and personalized energy-saving recommendations. What would you like to know?";
+  }
+
+  function sendMessage(){
+    const input=$("chatInput");
+    const q=input.value.trim();
+    if(!q)return;
+    addMessage(q,true);input.value="";
+    setTimeout(()=>addMessage(aiReply(q)),450);
+  }
+
+  $("sendBtn").addEventListener("click",sendMessage);
+  $("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter")sendMessage()});
+  document.querySelectorAll(".suggestions button").forEach(btn=>{
+    btn.addEventListener("click",()=>{$("chatInput").value=btn.textContent;sendMessage()});
+  });
+  $("newChat").addEventListener("click",()=>{
+    $("messages").innerHTML=`<div class="msg"><div class="msg-avatar">⚡</div><div class="bubble">New conversation started. Ask me about your electricity usage, appliances, bill, or energy-saving opportunities.</div></div>`;
+  });
+  $("refreshBtn").addEventListener("click",()=>{
+    $("totalUsage").textContent="210 kWh";
+    $("bill").textContent="₹1,470";
+    $("footprint").textContent="24 kg";
+    drawChart();toast("Dashboard data refreshed.");
+  });
+  $("detailsBtn").addEventListener("click",()=>{
+    toast("AI insight: weekend usage is elevated mainly by AC and entertainment devices.");
+  });
+  $("challengeBtn").addEventListener("click",()=>{
+    addMessage("Show me my saving plan.",true);
+    setTimeout(()=>addMessage("Your priority plan: 1) reduce unnecessary AC runtime, 2) optimize water-heater usage, 3) eliminate standby power, 4) track daily consumption for one week."),400);
+    $("assistantPanel").scrollIntoView({behavior:"smooth",block:"center"});
+  });
+  document.querySelectorAll(".nav button").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      document.querySelectorAll(".nav button").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const sec=btn.dataset.section;
+      if(sec==="assistant")$("assistantPanel").scrollIntoView({behavior:"smooth",block:"center"});
+      else if(sec==="usage")document.querySelector(".grid-2 .card").scrollIntoView({behavior:"smooth",block:"center"});
+      else if(sec==="appliances")document.querySelectorAll(".lower .card")[1].scrollIntoView({behavior:"smooth",block:"center"});
+      else if(sec==="tips")$("challengeBtn").scrollIntoView({behavior:"smooth",block:"center"});
+      else if(sec==="settings")toast("Settings module is ready for your IBM integration.");
+      $("sidebar").classList.remove("open");
+    });
+  });
+  $("mobileToggle").addEventListener("click",()=>$("sidebar").classList.toggle("open"));
+  window.addEventListener("resize",drawChart);
+  renderBreakdown();drawChart();
+    window.wxOConfiguration = {
+    orchestrationID: "d0aab32c83db4290a196aaf305d9274e_5f49bf45-ebd5-404c-85e6-4abff8b29c92",
+    hostURL: "https://au-syd.watson-orchestrate.cloud.ibm.com",
+    rootElementID: "root",
+    deploymentPlatform: "ibmcloud",
+    crn: "crn:v1:bluemix:public:watsonx-orchestrate:au-syd:a/d0aab32c83db4290a196aaf305d9274e:5f49bf45-ebd5-404c-85e6-4abff8b29c92::",
+    chatOptions: {
+        agentId: "51c6ec17-eaca-4a6f-8564-ca97797ea852", 
+    }
+  };
+  setTimeout(function () {
+    const script = document.createElement('script');
+    script.src = `${window.wxOConfiguration.hostURL}/wxochat/wxoLoader.js?embed=true`;
+    script.addEventListener('load', function () {
+        wxoLoader.init();
+    });
+    document.head.appendChild(script);
+  }, 0);                     
+
+</script>
+</body>
+</html>
